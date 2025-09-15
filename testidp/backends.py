@@ -3,9 +3,9 @@ from social_core.backends.oauth import BaseOAuth2
 
 class TestIdPOAuth2(BaseOAuth2):
     name = "testidp"  # will show up as /auth/login/testidp/
-
+    ACCESS_TOKEN_METHOD = "POST"  # <--- required
     DEFAULT_SCOPE = ["openid", "email", "profile"]
-
+    EXTRA_DATA = [("id_token", "id_token")]  # useful for OIDC
     def authorization_url(self):
         return settings.SOCIAL_AUTH_TESTIDP_AUTHORIZATION_URL
 
