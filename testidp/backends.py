@@ -3,6 +3,7 @@ from social_core.backends.oauth import BaseOAuth2
 
 class TestIdPOAuth2(BaseOAuth2):
     name = "testidp"  # will show up as /auth/login/testidp/
+    ID_KEY = "username"
     ACCESS_TOKEN_METHOD = "POST"  # <--- required
     DEFAULT_SCOPE = ["openid", "email", "profile"]
     EXTRA_DATA = [("id_token", "id_token")]  # useful for OIDC
@@ -31,3 +32,7 @@ class TestIdPOAuth2(BaseOAuth2):
             self.user_data_url(),
             headers={"Authorization": f"Bearer {access_token}"}
         )
+
+    def get_user_id(self, details, response):
+        """Get and associate Django User by the field indicated by ID_KEY"""
+        return details.get(self.ID_KEY)
