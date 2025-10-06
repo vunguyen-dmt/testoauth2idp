@@ -2,19 +2,19 @@ from django.conf import settings
 from social_core.backends.oauth import BaseOAuth2
 
 class TestIdPOAuth2(BaseOAuth2):
-    name = "testidp"  # will show up as /auth/login/testidp/
+    name = "HT"  # will show up as /auth/login/testidp/
     ID_KEY = "username"
     ACCESS_TOKEN_METHOD = "POST"  # <--- required
     DEFAULT_SCOPE = ["openid", "email", "profile"]
     EXTRA_DATA = [("id_token", "id_token")]  # useful for OIDC
     def authorization_url(self):
-        return settings.SOCIAL_AUTH_TESTIDP_AUTHORIZATION_URL
+        return settings.SOCIAL_AUTH_HT_AUTHORIZATION_URL
 
     def access_token_url(self):
-        return settings.SOCIAL_AUTH_TESTIDP_ACCESS_TOKEN_URL
+        return settings.SOCIAL_AUTH_HT_ACCESS_TOKEN_URL
 
     def user_data_url(self):
-        return settings.SOCIAL_AUTH_TESTIDP_USER_DATA_URL
+        return settings.SOCIAL_AUTH_HT_USER_DATA_URL
 
     def get_user_details(self, response):
         """Map IdP JSON response to Open edX fields."""
