@@ -1,7 +1,7 @@
 from django.conf import settings
 from social_core.backends.oauth import BaseOAuth2
 
-class TestIdPOAuth2(BaseOAuth2):
+class HTOAuth2(BaseOAuth2):
     name = "HT"  # will show up as /auth/login/testidp/
     ID_KEY = "username"
     ACCESS_TOKEN_METHOD = "POST"  # <--- required
