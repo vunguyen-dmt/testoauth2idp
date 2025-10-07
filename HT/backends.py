@@ -2,11 +2,13 @@ from django.conf import settings
 from social_core.backends.oauth import BaseOAuth2
 
 class HTOAuth2(BaseOAuth2):
-    name = "HT"  # will show up as /auth/login/testidp/
+    name = "HT"
     ID_KEY = "username"
-    ACCESS_TOKEN_METHOD = "POST"  # <--- required
+    ACCESS_TOKEN_METHOD = "POST"
     DEFAULT_SCOPE = ["openid", "email", "profile"]
-    EXTRA_DATA = [("id_token", "id_token")]  # useful for OIDC
+    EXTRA_DATA = [("id_token", "id_token")]  # no session_state here!
+    REDIRECT_STATE = False
+    
     def authorization_url(self):
         return settings.SOCIAL_AUTH_HT_AUTHORIZATION_URL
 
@@ -16,8 +18,18 @@ class HTOAuth2(BaseOAuth2):
     def user_data_url(self):
         return settings.SOCIAL_AUTH_HT_USER_DATA_URL
 
+    def auth_complete(self, *args, **kwargs):
+        """
+        Override to prevent KeyError when session_state is missing.
+        """
+        data = self.data.copy()
+        # Some IdPs (non-Keycloak) don't include session_state
+        if "session_state" not in data:
+            data["session_state"] = None
+        self.data = data
+        return super().auth_complete(*args, **kwargs)
+
     def get_user_details(self, response):
-        """Map IdP JSON response to Open edX fields."""
         return {
             "username": response.get("preferred_username") or response.get("sub"),
             "email": response.get("email"),
@@ -27,12 +39,10 @@ class HTOAuth2(BaseOAuth2):
         }
 
     def user_data(self, access_token, *args, **kwargs):
-        """Fetch user profile from IdP using access token."""
         return self.get_json(
             self.user_data_url(),
             headers={"Authorization": f"Bearer {access_token}"}
         )
 
     def get_user_id(self, details, response):
-        """Get and associate Django User by the field indicated by ID_KEY"""
         return details.get(self.ID_KEY)
