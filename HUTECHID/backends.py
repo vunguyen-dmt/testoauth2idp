@@ -20,19 +20,19 @@ class HUTECHIDOAuth2(BaseOAuth2):
     REDIRECT_STATE = False
 
     def authorization_url(self):
-        return settings.SOCIAL_AUTH_HT_AUTHORIZATION_URL
+        return settings.SOCIAL_AUTH_HUTECHID_AUTHORIZATION_URL
 
     def access_token_url(self):
-        return settings.SOCIAL_AUTH_HT_ACCESS_TOKEN_URL
+        return settings.SOCIAL_AUTH_HUTECHID_ACCESS_TOKEN_URL
 
     def get_client_id(self):
-        return settings.SOCIAL_AUTH_HT_KEY
+        return settings.SOCIAL_AUTH_HUTECHID_KEY
 
     def get_client_secret(self):
-        return settings.SOCIAL_AUTH_HT_SECRET
+        return settings.SOCIAL_AUTH_HUTECHID_SECRET
 
     def auto_create_user_enabled(self):
-        return getattr(settings, "SOCIAL_AUTH_HT_AUTO_CREATE_USER_ENABLE", False)
+        return getattr(settings, "SOCIAL_AUTH_HUTECHID_AUTO_CREATE_USER_ENABLE", False)
 
     def auth_params(self, state=None):
         params = super().auth_params(state)
