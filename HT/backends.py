@@ -23,6 +23,11 @@ class HTOAuth2(BaseOAuth2):
     def user_data_url(self):
         return settings.SOCIAL_AUTH_HT_USER_DATA_URL
     
+    def get_client_id(self):
+        return settings.SOCIAL_AUTH_HT_KEY
+    
+    def get_client_secret(self):
+        return settings.SOCIAL_AUTH_HT_SECRET
 
     def auth_params(self, state=None):
         """
@@ -77,14 +82,21 @@ class HTOAuth2(BaseOAuth2):
         code = self.data.get("authorization_code") or self.data.get("code")
         if not code:
             raise ValueError("No authorization code available for token exchange")
+        
+        logger.info("code=%s", code)
 
-        client_id, client_secret = self.get_key_and_secret()
+        client_id = self.get_client_id()
+        client_secret = self.get_client_secret()
+        
         payload = {
             "authorization_code": code,
             "client_id": client_id,
             "client_secret": client_secret,
         }
+
         headers = {"Content-Type": "application/json"}
+
+        logger.info("Before sending exchange token request")
 
         resp = self.request(
             self.access_token_url(), method="POST",
