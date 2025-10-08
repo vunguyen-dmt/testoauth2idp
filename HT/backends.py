@@ -29,7 +29,10 @@ class HTOAuth2(BaseOAuth2):
         # Example: remap 'scope' to 'custom_scope' or add extra params
         if "state" in params:
             params["redirect"] = params.pop("state")
-        
+
+        if "redirect_uri" in params:
+            params["backlink"] = params.pop("redirect_uri")
+
         return params
 
     def auth_complete(self, *args, **kwargs):
