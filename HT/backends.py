@@ -2,11 +2,6 @@ from django.conf import settings
 from social_core.backends.oauth import BaseOAuth2
 import json
 from typing import TYPE_CHECKING, Any, Literal
-if TYPE_CHECKING:
-    from collections.abc import Mapping
-
-    from requests.auth import AuthBase
-
 import logging
 logger = logging.getLogger(__name__)
 
@@ -67,12 +62,12 @@ class HTOAuth2(BaseOAuth2):
 
     def request_access_token(
         self,
-        url: str,
-        method: Literal["GET", "POST", "DELETE"] = "GET",
-        headers: Mapping[str, str | bytes] | None = None,
-        data: dict | bytes | str | None = None,
-        auth: tuple[str, str] | AuthBase | None = None,
-        params: dict | None = None,
+        url,
+        method,
+        headers,
+        data,
+        auth,
+        params,
     ):
         logger.info("request_access_token")
         """
