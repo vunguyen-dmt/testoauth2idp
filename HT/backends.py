@@ -1,6 +1,8 @@
 from django.conf import settings
 from social_core.backends.oauth import BaseOAuth2
 import json
+import logging
+logger = logging.getLogger(__name__)
 
 class HTOAuth2(BaseOAuth2):
     name = "HT"
@@ -40,6 +42,7 @@ class HTOAuth2(BaseOAuth2):
         """
         Override to prevent KeyError when session_state is missing.
         """
+        logger.info("HTOAuth2.auth_complete called, data=%s", self.data)
         data = self.data.copy()
         # Some IdPs (non-Keycloak) don't include session_state
         if "session_state" not in data:
@@ -76,6 +79,8 @@ class HTOAuth2(BaseOAuth2):
             self.access_token_url(), method="POST",
             data=json.dumps(payload), headers=headers
         )
+
+        logger.info("HT token exchange response: %s %s", resp.status_code, resp.text[:500])
 
         try:
             body = resp.json()
