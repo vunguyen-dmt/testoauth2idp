@@ -1,5 +1,6 @@
 from django.conf import settings
 from social_core.backends.oauth import BaseOAuth2
+import json
 
 class HTOAuth2(BaseOAuth2):
     name = "HT"
@@ -52,21 +53,71 @@ class HTOAuth2(BaseOAuth2):
     
         self.data = data
         return super().auth_complete(*args, **kwargs)
+    
+
+    def request_access_token(self, *args, **kwargs):
+        """
+        Custom token exchange for HT IdP.
+        Sends JSON with authorization_code and extracts user info directly from the response.
+        """
+        code = self.data.get("authorization_code") or self.data.get("code")
+        if not code:
+            raise ValueError("No authorization code available for token exchange")
+
+        client_id, client_secret = self.get_key_and_secret()
+        payload = {
+            "authorization_code": code,
+            "client_id": client_id,
+            "client_secret": client_secret,
+        }
+        headers = {"Content-Type": "application/json"}
+
+        resp = self.request(
+            self.access_token_url(), method="POST",
+            data=json.dumps(payload), headers=headers
+        )
+
+        try:
+            body = resp.json()
+        except Exception:
+            body = json.loads(resp.text or "{}")
+
+        # Extract user + token info
+        d = body.get("data") or {}
+        user_data = d.get("data") or {}
+        token = d.get("token")
+
+        if not token:
+            raise Exception(f"Couldn't extract access token from response: {body!r}")
+
+        # Merge token and user info so PSA can reuse it
+        merged = {
+            "access_token": token,
+            "contact_id": d.get("contact_id"),
+            "username": d.get("username"),
+            "fullname": user_data.get("ho_ten"),
+            "email": user_data.get("email"),
+            "avatar": user_data.get("avatar"),
+        }
+
+        return merged
+
+    def user_data(self, access_token, *args, **kwargs):
+        """
+        IdP already returned user data in the token response.
+        PSA will call this after `request_access_token`, so we just reuse it.
+        """
+        # Reuse data returned from request_access_token
+        return getattr(self, "access_token_data", {})
 
     def get_user_details(self, response):
         return {
-            "username": response.get("preferred_username") or response.get("sub"),
+            "username": response.get("username"),
             "email": response.get("email"),
-            "fullname": response.get("name"),
-            "first_name": response.get("given_name", ""),
-            "last_name": response.get("family_name", ""),
+            "fullname": response.get("fullname"),
+            "first_name": "",
+            "last_name": "",
         }
-
-    def user_data(self, access_token, *args, **kwargs):
-        return self.get_json(
-            self.user_data_url(),
-            headers={"Authorization": f"Bearer {access_token}"}
-        )
 
     def get_user_id(self, details, response):
         return details.get(self.ID_KEY)
