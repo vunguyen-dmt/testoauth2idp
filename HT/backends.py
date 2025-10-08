@@ -17,6 +17,20 @@ class HTOAuth2(BaseOAuth2):
 
     def user_data_url(self):
         return settings.SOCIAL_AUTH_HT_USER_DATA_URL
+    
+
+    def auth_params(self, state=None):
+        """
+        Return parameters used in the authorization URL.
+        Here you can remap or add custom parameters before sending to the IdP.
+        """
+        params = super().auth_params(state)
+        
+        # Example: remap 'scope' to 'custom_scope' or add extra params
+        if "state" in params:
+            params["redirect"] = params.pop("state")
+        
+        return params
 
     def auth_complete(self, *args, **kwargs):
         """
@@ -29,6 +43,9 @@ class HTOAuth2(BaseOAuth2):
 
         if "authorization_code" in data:
             data["code"] = data["authorization_code"]
+
+        if "redirect" in data:
+            data["state"] = data["redirect"]
     
         self.data = data
         return super().auth_complete(*args, **kwargs)
