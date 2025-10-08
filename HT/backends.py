@@ -7,7 +7,7 @@ class HTOAuth2(BaseOAuth2):
     ACCESS_TOKEN_METHOD = "POST"
     DEFAULT_SCOPE = ["openid", "email", "profile"]
     EXTRA_DATA = [("id_token", "id_token")]  # no session_state here!
-    # REDIRECT_STATE = False
+    REDIRECT_STATE = False
     
     def authorization_url(self):
         return settings.SOCIAL_AUTH_HT_AUTHORIZATION_URL
