@@ -126,6 +126,7 @@ class HUTECHIDOAuth2(BaseOAuth2):
         with transaction.atomic():
             linked = UserSocialAuth.objects.filter(provider=self.name, uid=username).first()
             if linked:
+                self.update_user_data(linked.user, merged)
                 return linked.user
 
             # Find existing user by username or email
@@ -155,10 +156,7 @@ class HUTECHIDOAuth2(BaseOAuth2):
                 UserSocialAuth.objects.get_or_create(user=user, provider=self.name, uid=username)
 
             # update user data
-            profile, _ = UserProfile.objects.get_or_create(user=user)
-            if fullname and profile.name != fullname:
-                profile.name = fullname
-                profile.save(update_fields=["name"])
+            self.update_user_data(user, merged)
 
             return user
 
@@ -186,3 +184,10 @@ class HUTECHIDOAuth2(BaseOAuth2):
         alphabet = string.ascii_letters + string.digits
         random_part = ''.join(secrets.choice(alphabet) for _ in range(length))
         return f"{random_part}-temp-email@{domain}"
+    
+    def update_user_data(self, user, user_data):
+        fullname = (user_data.get("fullname") or "").strip()
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        if fullname and profile.name != fullname:
+            profile.name = fullname
+            profile.save(update_fields=["name"])
