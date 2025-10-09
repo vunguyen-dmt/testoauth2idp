@@ -6,6 +6,8 @@ from django.db import transaction
 from django.db.models import Q
 from common.djangoapps.student.models import UserProfile
 import json
+import secrets
+import string
 import logging
 
 logger = logging.getLogger(__name__)
@@ -123,7 +125,8 @@ class HUTECHIDOAuth2(BaseOAuth2):
 
             if not user:
                 # Create new user
-                user = User.objects.create_user(username=username, email=email)
+                password = self.generate_strong_password(32)
+                user = User.objects.create_user(username=username, email=email, password = password)
                 UserProfile.objects.create(user=user, name=fullname)
                 logger.info(f"Created new user {username} for {self.name} IdP")
             else:
@@ -148,3 +151,8 @@ class HUTECHIDOAuth2(BaseOAuth2):
 
     def get_user_id(self, details, response):
         return details.get(self.ID_KEY)
+    
+    def generate_strong_password(length: int = 32) -> str:
+        """Generate a secure random password with letters, digits, and symbols."""
+        alphabet = string.ascii_letters + string.digits + "!@#$%^&*()-_=+"
+        return ''.join(secrets.choice(alphabet) for _ in range(length))
