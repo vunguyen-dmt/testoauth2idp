@@ -94,6 +94,10 @@ class HUTECHIDOAuth2(BaseOAuth2):
         if not email:
             email = self.generate_temp_email('hutech.edu.vn', 32)
 
+        # set a default fullname.
+        if not fullname:
+            fullname = username
+
         merged = {
             "access_token": token,
             "username": username,
@@ -135,19 +139,31 @@ class HUTECHIDOAuth2(BaseOAuth2):
             if not user:
                 # Create new user
                 password = self.generate_strong_password(32)
-                user = User.objects.create_user(username=username, email=email, password = password)
-                UserProfile.objects.create(user=user, name=fullname)
-                logger.info(f"Created new user {username} for {self.name} IdP")
+                try:
+                    user = User.objects.create_user(username=username, email=email, password = password)
+                    UserProfile.objects.create(user=user, name=fullname)
+                    logger.info(f"Created new user {username} for {self.name} IdP")
+                except Exception as e:
+                    logger.exception(f"Failed to create user for {username}: {e}")
+                    raise
             else:
                 logger.info(f"Linking existing user {user.username} to {self.name}")
 
             # Link social auth
-            UserSocialAuth.objects.get_or_create(user=user, provider=self.name, uid=username)
+            # case: same email but different username, can not log this user in, require a manual data change.
+            if user and user.username == username:
+                UserSocialAuth.objects.get_or_create(user=user, provider=self.name, uid=username)
+
+            # update user data
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            if fullname and profile.name != fullname:
+                profile.name = fullname
+                profile.save(update_fields=["name"])
 
             return user
 
     def user_data(self, access_token, *args, **kwargs):
-        return getattr(self, "access_token_data", {})
+        return getattr(self, "access_token_data", {}).copy()
 
     def get_user_details(self, response):
         return {
