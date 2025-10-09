@@ -104,6 +104,11 @@ class HUTECHIDOAuth2(BaseOAuth2):
         username = (merged.get("username") or "").strip()
         email = (merged.get("email") or "").strip()
         fullname = (merged.get("fullname") or "").strip()
+
+        # generate a unique temporary email so user can be created.
+        if not email:
+            email = self.generate_temp_email('hutech.edu.vn', 32)
+
         User = get_user_model()
 
         if not username and not email:
@@ -156,3 +161,8 @@ class HUTECHIDOAuth2(BaseOAuth2):
         """Generate a secure random password with letters, digits, and symbols."""
         alphabet = string.ascii_letters + string.digits + "!@#$%^&*()-_=+"
         return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+    def generate_temp_email(self, domain="hutech.edu.vn", length=32):
+        alphabet = string.ascii_letters + string.digits
+        random_part = ''.join(secrets.choice(alphabet) for _ in range(length))
+        return f"{random_part}-temp-email@{domain}"
