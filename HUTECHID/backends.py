@@ -152,7 +152,7 @@ class HUTECHIDOAuth2(BaseOAuth2):
     def get_user_id(self, details, response):
         return details.get(self.ID_KEY)
     
-    def generate_strong_password(length: int = 32) -> str:
+    def generate_strong_password(self, length: int = 32) -> str:
         """Generate a secure random password with letters, digits, and symbols."""
         alphabet = string.ascii_letters + string.digits + "!@#$%^&*()-_=+"
         return ''.join(secrets.choice(alphabet) for _ in range(length))
