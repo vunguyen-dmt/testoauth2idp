@@ -86,11 +86,19 @@ class HUTECHIDOAuth2(BaseOAuth2):
             logger.error(f"Couldn't extract access token from response: {body!r}")
             raise Exception(f"Couldn't extract access token from response: {body!r}")
 
+
+        username = (d.get("username") or "").strip()
+        email = (user_data.get("email") or "").strip()
+        fullname = (user_data.get("ho_ten") or "").strip()
+        # generate a unique temporary email so user can be created.
+        if not email:
+            email = self.generate_temp_email('hutech.edu.vn', 32)
+
         merged = {
             "access_token": token,
-            "username": (d.get("username") or "").strip(),
-            "fullname": (user_data.get("ho_ten") or "").strip(),
-            "email": (user_data.get("email") or "").strip(),
+            "username": username,
+            "fullname": fullname,
+            "email": email,
         }
 
         self.access_token_data = merged
@@ -104,10 +112,6 @@ class HUTECHIDOAuth2(BaseOAuth2):
         username = (merged.get("username") or "").strip()
         email = (merged.get("email") or "").strip()
         fullname = (merged.get("fullname") or "").strip()
-
-        # generate a unique temporary email so user can be created.
-        if not email:
-            email = self.generate_temp_email('hutech.edu.vn', 32)
 
         User = get_user_model()
 
